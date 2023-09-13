@@ -12,4 +12,11 @@ func New(input string) *Lexer {
 }
 
 func (l *Lexer) readChar() {
+	if l.nextPos >= len(l.input) {
+		l.currentChar = 0
+	} else {
+		l.currentChar = l.input[l.nextPos]
+	}
+	l.currentPos = l.nextPos
+	l.nextPos++
 }
