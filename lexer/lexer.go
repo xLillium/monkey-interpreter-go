@@ -8,7 +8,15 @@ type Lexer struct {
 }
 
 func New(input string) *Lexer {
-	return &Lexer{input: input}
+	l := &Lexer{input: input}
+
+	if len(input) > 0 {
+		l.currentChar = input[0]
+		l.nextPos = 1
+		// no need to set l.currentPos to 0, Go already instanciates it with its struct type's zero value
+	}
+
+	return l
 }
 
 func (l *Lexer) readChar() {
