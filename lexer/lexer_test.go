@@ -10,6 +10,24 @@ func TestLexerInitialization(t *testing.T) {
 	input := "=+(),;"
 	lexer := New(input)
 
+	// Check if the input string is correctly set
+	if lexer.input != input {
+		t.Fatalf("Expected lexer input to be %s, got %s", input, lexer.input)
+	}
+
+	// Check the initial value of currentChar
+	if lexer.currentChar != input[0] {
+		t.Fatalf("Expected current char to be '%c', got '%c'", input[0], lexer.currentChar)
+	}
+
+	// Check the initial position values
+	if lexer.currentPos != 0 {
+		t.Fatalf("Expected current position to be 0, got %d", lexer.currentPos)
+	}
+	if lexer.nextPos != 1 {
+		t.Fatalf("Expected next position to be 1, got %d", lexer.nextPos)
+	}
+
 	if lexer.input != input {
 		t.Fatalf("Expected lexer input to be %s, got %s", input, lexer.input)
 	}
