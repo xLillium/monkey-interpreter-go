@@ -1,5 +1,7 @@
 package lexer
 
+import "monkey/token"
+
 type Lexer struct {
 	input       string
 	currentChar byte
@@ -27,4 +29,9 @@ func (l *Lexer) readChar() {
 	}
 	l.currentPos = l.nextPos
 	l.nextPos++
+}
+
+func (l *Lexer) NextToken() token.Token {
+	var token token.Token
+	return token
 }
