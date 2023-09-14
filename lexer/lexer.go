@@ -24,17 +24,6 @@ func New(input string) *Lexer {
 	return l
 }
 
-// readChar reads the next character from the input and updates the current and next positions.
-func (l *Lexer) readChar() {
-	if l.nextPos >= len(l.input) {
-		l.currentChar = 0
-	} else {
-		l.currentChar = l.input[l.nextPos]
-	}
-	l.currentPos = l.nextPos
-	l.nextPos++
-}
-
 // NextToken scans and returns the next token from the input.
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
@@ -78,16 +67,22 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
+// readChar reads the next character from the input and updates the current and next positions.
+func (l *Lexer) readChar() {
+	if l.nextPos >= len(l.input) {
+		l.currentChar = 0
+	} else {
+		l.currentChar = l.input[l.nextPos]
+	}
+	l.currentPos = l.nextPos
+	l.nextPos++
+}
+
 // skipWhitespace advances the scanner until a non-whitespace character is encountered.
 func (l *Lexer) skipWhitespace() {
 	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
 		l.readChar()
 	}
-}
-
-// isLetter checks if the given byte corresponds to a valid letter for identifiers in Monkey.
-func isLetter(b byte) bool {
-	return 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || b == '_'
 }
 
 // readIdentifier scans an identifier from the input, capturing characters until a non-letter is encountered.
@@ -99,11 +94,6 @@ func (l *Lexer) readIdentifier() string {
 	return l.input[startPos:l.currentPos]
 }
 
-// isDigit checks if the given byte is a valid digit.
-func isDigit(b byte) bool {
-	return '0' <= b && b <= '9'
-}
-
 // readNumber scans a number from the input, capturing characters until a non-digit is encountered.
 func (l *Lexer) readNumber() string {
 	startPos := l.currentPos
@@ -111,4 +101,16 @@ func (l *Lexer) readNumber() string {
 		l.readChar()
 	}
 	return l.input[startPos:l.currentPos]
+}
+
+// Utility functions
+
+// isDigit checks if the given byte is a valid digit.
+func isDigit(b byte) bool {
+	return '0' <= b && b <= '9'
+}
+
+// isLetter checks if the given byte corresponds to a valid letter for identifiers in Monkey.
+func isLetter(b byte) bool {
+	return 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || b == '_'
 }
