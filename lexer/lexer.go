@@ -1,7 +1,9 @@
+// Package lexer implements lexical tokenization for the Monkey programming language.
 package lexer
 
 import "monkey/token"
 
+// Lexer represents a lexical scanner for tokenizing the Monkey programming language.
 type Lexer struct {
 	input       string
 	currentChar byte
@@ -9,6 +11,7 @@ type Lexer struct {
 	nextPos     int
 }
 
+// New returns a new instance of the Lexer, initialized with the provided input string.
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 
@@ -21,6 +24,7 @@ func New(input string) *Lexer {
 	return l
 }
 
+// readChar reads the next character from the input and updates the current and next positions.
 func (l *Lexer) readChar() {
 	if l.nextPos >= len(l.input) {
 		l.currentChar = 0
@@ -31,6 +35,7 @@ func (l *Lexer) readChar() {
 	l.nextPos++
 }
 
+// NextToken scans and returns the next token from the input.
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
@@ -73,16 +78,19 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
+// skipWhitespace advances the scanner until a non-whitespace character is encountered.
 func (l *Lexer) skipWhitespace() {
 	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
 		l.readChar()
 	}
 }
 
+// isLetter checks if the given byte corresponds to a valid letter for identifiers in Monkey.
 func isLetter(b byte) bool {
 	return 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || b == '_'
 }
 
+// readIdentifier scans an identifier from the input, capturing characters until a non-letter is encountered.
 func (l *Lexer) readIdentifier() string {
 	startPos := l.currentPos
 	for isLetter(l.currentChar) {
@@ -91,10 +99,12 @@ func (l *Lexer) readIdentifier() string {
 	return l.input[startPos:l.currentPos]
 }
 
+// isDigit checks if the given byte is a valid digit.
 func isDigit(b byte) bool {
 	return '0' <= b && b <= '9'
 }
 
+// readNumber scans a number from the input, capturing characters until a non-digit is encountered.
 func (l *Lexer) readNumber() string {
 	startPos := l.currentPos
 	for isDigit(l.currentChar) {

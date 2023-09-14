@@ -1,3 +1,5 @@
+// Package lexer contains unit tests for the lexer package which is responsible for tokenizing
+// Monkey language source code.
 package lexer
 
 import (
@@ -6,6 +8,7 @@ import (
 	"monkey/token"
 )
 
+// TestLexerInitialization tests whether the lexer correctly initializes with the provided input.
 func TestLexerInitialization(t *testing.T) {
 	input := "=+(),;"
 	lexer := New(input)
@@ -33,6 +36,7 @@ func TestLexerInitialization(t *testing.T) {
 	}
 }
 
+// TestReadCharProgression tests the progression of reading characters in the input string.
 func TestReadCharProgression(t *testing.T) {
 	input := "abc"
 	lexer := New(input)
@@ -59,14 +63,14 @@ func TestReadCharProgression(t *testing.T) {
 	}
 }
 
-// Struct for asserting the expected token types and literals that the lexer should produce
+// tokenTest represents an expected token outcome from tokenization by the lexer.
 type tokenTest struct {
 	expectedType    token.TokenType
 	expectedLiteral string
 }
 
-// Helper function to run through a series of tokenTests,
-// checking the lexer's output against the expected tokens
+// runNextTokenTests is a helper function to run a series of tokenTest assertions,
+// validating the lexer's output against the expected tokens.
 func runNextTokenTests(tests []tokenTest, lexer *Lexer, t *testing.T) {
 	for i, testToken := range tests {
 		token := lexer.NextToken()
@@ -81,6 +85,7 @@ func runNextTokenTests(tests []tokenTest, lexer *Lexer, t *testing.T) {
 	}
 }
 
+// TestNextToken_SimpleTokens tests the lexer's ability to tokenize simple one-character tokens.
 func TestNextToken_SimpleTokens(t *testing.T) {
 	input := "=+(){},;"
 	lexer := New(input)
@@ -100,6 +105,8 @@ func TestNextToken_SimpleTokens(t *testing.T) {
 	runNextTokenTests(tests, lexer, t)
 }
 
+// TestNextToken_MonkeySourceCode tests the lexer's ability to tokenize a more complex input
+// resembling an actual Monkey language source code snippet.
 func TestNextToken_MonkeySourceCode(t *testing.T) {
 	input := `let five = 5;
 let ten = 10;
