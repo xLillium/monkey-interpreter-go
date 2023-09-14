@@ -45,14 +45,33 @@ func TestReadCharProgression(t *testing.T) {
 	}
 }
 
+// Struct for asserting the expected token types and literals that the lexer should produce
+type tokenTest struct {
+	expectedType    token.TokenType
+	expectedLiteral string
+}
+
+// Helper function to run through a series of tokenTests,
+// checking the lexer's output against the expected tokens
+func runNextTokenTests(tests []tokenTest, lexer *Lexer, t *testing.T) {
+	for i, testToken := range tests {
+		token := lexer.NextToken()
+
+		if token.Type != testToken.expectedType {
+			t.Fatalf("tests[%d] - token type wrong. expected=%q, got=%q", i, testToken.expectedType, token.Type)
+		}
+		if token.Literal != testToken.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, testToken.expectedLiteral, token.Literal)
+		}
+
+	}
+}
+
 func TestNextToken_SimpleTokens(t *testing.T) {
 	input := "=+(){},;"
 	lexer := New(input)
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
+	tests := []tokenTest{
 		{token.ASSIGN, "="},
 		{token.PLUS, "+"},
 		{token.LPAREN, "("},
@@ -64,17 +83,7 @@ func TestNextToken_SimpleTokens(t *testing.T) {
 		{token.EOF, ""},
 	}
 
-	for i, tt := range tests {
-		token := lexer.NextToken()
-
-		if token.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - token type wrong. expected=%q, got=%q", i, tt.expectedType, token.Type)
-		}
-		if token.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, tt.expectedLiteral, token.Literal)
-		}
-
-	}
+	runNextTokenTests(tests, lexer, t)
 }
 
 func TestNextToken_MonkeySourceCode(t *testing.T) {
@@ -87,10 +96,7 @@ let result = add(five, ten);
 `
 	lexer := New(input)
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
+	tests := []tokenTest{
 		{token.LET, "let"},
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
@@ -130,15 +136,5 @@ let result = add(five, ten);
 		{token.EOF, ""},
 	}
 
-	for i, tt := range tests {
-		token := lexer.NextToken()
-
-		if token.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - token type wrong. expected=%q, got=%q", i, tt.expectedType, token.Type)
-		}
-		if token.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, tt.expectedLiteral, token.Literal)
-		}
-
-	}
+	runNextTokenTests(tests, lexer, t)
 }
