@@ -47,6 +47,10 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	RETURN   = "RETURN"
+
+	// EQ and NOT_EQ are used for equality checking.
+	EQ     = "=="
+	NOT_EQ = "!="
 )
 
 // keywords maps Monkey's keyword strings to their TokenType values.
