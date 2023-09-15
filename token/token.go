@@ -21,9 +21,15 @@ const (
 	IDENT = "IDENT" // add, foobar, x, y, ...
 	INT   = "INT"   // 1343456789
 
-	// ASSIGN and PLUS are the main arithmetic and assignment operators.
-	ASSIGN = "="
-	PLUS   = "+"
+	// Operators
+	ASSIGN   = "="
+	PLUS     = "+"
+	MINUS    = "-"
+	BANG     = "!"
+	ASTERISK = "*"
+	SLASH    = "/"
+	LT       = "<"
+	GT       = ">"
 
 	// Delimiters such as comma, semicolon, and various brackets.
 	COMMA     = ","
