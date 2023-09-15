@@ -32,7 +32,13 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.currentChar {
 	case '=':
-		tok = token.Token{Type: token.ASSIGN, Literal: string(l.currentChar)}
+		if l.peekChar() == '=' {
+			ch := l.currentChar
+			l.readChar()
+			tok = token.Token{Type: token.EQ, Literal: string(ch) + string(l.currentChar)}
+		} else {
+			tok = token.Token{Type: token.ASSIGN, Literal: string(l.currentChar)}
+		}
 	case '+':
 		tok = token.Token{Type: token.PLUS, Literal: string(l.currentChar)}
 	case '(':
@@ -58,7 +64,13 @@ func (l *Lexer) NextToken() token.Token {
 	case '>':
 		tok = token.Token{Type: token.GT, Literal: string(l.currentChar)}
 	case '!':
-		tok = token.Token{Type: token.BANG, Literal: string(l.currentChar)}
+		if l.peekChar() == '=' {
+			ch := l.currentChar
+			l.readChar()
+			tok = token.Token{Type: token.NOT_EQ, Literal: string(ch) + string(l.currentChar)}
+		} else {
+			tok = token.Token{Type: token.BANG, Literal: string(l.currentChar)}
+		}
 	case 0:
 		tok = token.Token{Type: token.EOF, Literal: ""}
 	default:
@@ -95,6 +107,13 @@ func (l *Lexer) skipWhitespace() {
 	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
 		l.readChar()
 	}
+}
+
+func (l *Lexer) peekChar() byte {
+	if l.nextPos >= len(l.input) {
+		return 0
+	}
+	return l.input[l.nextPos]
 }
 
 // readIdentifier scans an identifier from the input, capturing characters until a non-letter is encountered.
