@@ -39,15 +39,25 @@ const (
 	LBRACE    = "{"
 	RBRACE    = "}"
 
-	// FUNCTION and LET represent Monkey's keywords.
+	// Keywords
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	RETURN   = "RETURN"
 )
 
 // keywords maps Monkey's keyword strings to their TokenType values.
 var keywords = map[string]TokenType{
-	"fn":  FUNCTION,
-	"let": LET,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 // LookupIdent checks the keywords table to see if the given identifier is a reserved keyword.
