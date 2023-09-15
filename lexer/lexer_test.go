@@ -87,7 +87,7 @@ func runNextTokenTests(tests []tokenTest, lexer *Lexer, t *testing.T) {
 
 // TestNextToken_SimpleTokens tests the lexer's ability to tokenize simple one-character tokens.
 func TestNextToken_SimpleTokens(t *testing.T) {
-	input := "=+(){},;"
+	input := "=+(){},;-/*<>!"
 	lexer := New(input)
 
 	tests := []tokenTest{
@@ -99,6 +99,12 @@ func TestNextToken_SimpleTokens(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.COMMA, ","},
 		{token.SEMICOLON, ";"},
+		{token.MINUS, "-"},
+		{token.SLASH, "/"},
+		{token.ASTERISK, "*"},
+		{token.LT, "<"},
+		{token.GT, ">"},
+		{token.BANG, "!"},
 		{token.EOF, ""},
 	}
 
