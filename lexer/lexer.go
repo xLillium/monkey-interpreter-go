@@ -32,45 +32,33 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.currentChar {
 	case '=':
-		if l.peekChar() == '=' {
-			ch := l.currentChar
-			l.readChar()
-			tok = token.Token{Type: token.EQ, Literal: string(ch) + string(l.currentChar)}
-		} else {
-			tok = token.Token{Type: token.ASSIGN, Literal: string(l.currentChar)}
-		}
+		tok = l.handleTwoCharToken(token.ASSIGN, '=', token.EQ)
 	case '+':
-		tok = token.Token{Type: token.PLUS, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.PLUS)
 	case '(':
-		tok = token.Token{Type: token.LPAREN, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.LPAREN)
 	case ')':
-		tok = token.Token{Type: token.RPAREN, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.RPAREN)
 	case '{':
-		tok = token.Token{Type: token.LBRACE, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.LBRACE)
 	case '}':
-		tok = token.Token{Type: token.RBRACE, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.RBRACE)
 	case ',':
-		tok = token.Token{Type: token.COMMA, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.COMMA)
 	case ';':
-		tok = token.Token{Type: token.SEMICOLON, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.SEMICOLON)
 	case '-':
-		tok = token.Token{Type: token.MINUS, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.MINUS)
 	case '/':
-		tok = token.Token{Type: token.SLASH, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.SLASH)
 	case '*':
-		tok = token.Token{Type: token.ASTERISK, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.ASTERISK)
 	case '<':
-		tok = token.Token{Type: token.LT, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.LT)
 	case '>':
-		tok = token.Token{Type: token.GT, Literal: string(l.currentChar)}
+		tok = l.handleSingleCharToken(token.GT)
 	case '!':
-		if l.peekChar() == '=' {
-			ch := l.currentChar
-			l.readChar()
-			tok = token.Token{Type: token.NOT_EQ, Literal: string(ch) + string(l.currentChar)}
-		} else {
-			tok = token.Token{Type: token.BANG, Literal: string(l.currentChar)}
-		}
+		tok = l.handleTwoCharToken(token.BANG, '=', token.NOT_EQ)
 	case 0:
 		tok = token.Token{Type: token.EOF, Literal: ""}
 	default:
@@ -91,6 +79,28 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
+// skipWhitespace advances the scanner until a non-whitespace character is encountered.
+func (l *Lexer) skipWhitespace() {
+	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
+		l.readChar()
+	}
+}
+
+// handleTwoCharToken checks if the next character matches the expected character for a two-character token.
+func (l *Lexer) handleTwoCharToken(defaultType token.TokenType, expectedChar byte, twoCharType token.TokenType) token.Token {
+	if l.peekChar() == expectedChar {
+		ch := l.currentChar
+		l.readChar()
+		return token.Token{Type: twoCharType, Literal: string(ch) + string(l.currentChar)}
+	}
+	return l.handleSingleCharToken(defaultType)
+}
+
+// handleSingleCharToken returns a token of the given type with the current character as its literal.
+func (l *Lexer) handleSingleCharToken(t token.TokenType) token.Token {
+	return token.Token{Type: t, Literal: string(l.currentChar)}
+}
+
 // readChar reads the next character from the input and updates the current and next positions.
 func (l *Lexer) readChar() {
 	if l.nextPos >= len(l.input) {
@@ -102,13 +112,7 @@ func (l *Lexer) readChar() {
 	l.nextPos++
 }
 
-// skipWhitespace advances the scanner until a non-whitespace character is encountered.
-func (l *Lexer) skipWhitespace() {
-	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
-		l.readChar()
-	}
-}
-
+// peekChar returns the next character from the input without advancing the current and next positions.
 func (l *Lexer) peekChar() byte {
 	if l.nextPos >= len(l.input) {
 		return 0
