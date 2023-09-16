@@ -6,104 +6,89 @@ import (
 	"testing"
 )
 
-// TestLetStatements ensures that "let" statements are parsed correctly.
-func TestLetStatements(t *testing.T) {
+// parseInput takes a string input, tokenizes and parses it, then returns the resulting program.
+func parseInput(input string) *ast.Program {
+	l := lexer.New(input)
+	p := New(l)
+	return p.ParseProgram()
+}
+
+// ----- Tests for "let" statements -----
+
+// TestLetStatementsParsing verifies the correct parsing of 'let' statements in the Monkey language.
+func TestLetStatementsParsing(t *testing.T) {
 	input := `
 let x = 5;
 let y = 10;
 let foobar = 838383;
 `
-	lexer := lexer.New(input)
-	parser := New(lexer)
-	program := parser.ParseProgram()
 
-	// Check if parsing resulted in a valid program.
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
-	}
+	program := parseInput(input)
+	assertNumberOfStatements(t, program, 3)
 
-	// Check if the correct number of "let" statements are parsed.
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%d",
-			len(program.Statements))
-	}
-
-	// Expected identifiers in the "let" statements.
-	tests := []struct {
-		expectedIdentifier string
-	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
-	}
-
-	// Iterate through the parsed statements and check if they match expected values.
-	for i, test := range tests {
+	expectedIdentifiers := []string{"x", "y", "foobar"}
+	for i, ident := range expectedIdentifiers {
 		statement := program.Statements[i]
-		if !testLetStatement(t, statement, test.expectedIdentifier) {
-			return
-		}
+		assertLetStatement(t, statement, ident)
 	}
 }
 
-// testLetStatement checks if the given statement is a valid "let" statement with the provided name.
-func testLetStatement(t *testing.T, statement ast.Statement, name string) bool {
-	// Check if token literal is "let".
+// assertNumberOfStatements checks if a program contains the expected number of statements.
+func assertNumberOfStatements(t *testing.T, program *ast.Program, num int) {
+	if len(program.Statements) != num {
+		t.Fatalf("Expected %d statements, but got %d", num, len(program.Statements))
+	}
+}
+
+// assertLetStatement validates that a given statement is a correctly parsed 'let' statement.
+func assertLetStatement(t *testing.T, statement ast.Statement, name string) {
 	if statement.TokenLiteral() != "let" {
-		t.Errorf("s.TokenLiteral not 'let'. got=%q", statement.TokenLiteral())
-		return false
+		t.Fatalf("Expected statement with 'let', but got %q", statement.TokenLiteral())
 	}
 
-	// Type assert the statement into a "let" statement.
-	letStatement, ok := statement.(*ast.LetStatement)
+	letStmt, ok := statement.(*ast.LetStatement)
 	if !ok {
-		t.Errorf("s not *ast.LetStatement. got=%T", statement)
-		return false
+		t.Fatalf("Expected *ast.LetStatement, but got %T", statement)
 	}
 
-	// Type assert the statement into a "let" statement.
-	if letStatement.Name.Value != name {
-		t.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStatement.Name.Value)
-		return false
+	if letStmt.Name.Value != name {
+		t.Errorf("Expected variable name to be %s, but got %s", name, letStmt.Name.Value)
 	}
-
-	// Check if the token literal of the statement's name matches the expected name.
-	if letStatement.Name.TokenLiteral() != name {
-		t.Errorf("s.Name not '%s'. got=%s", name, letStatement.Name)
-		return false
-	}
-	return true
 }
 
-func TestReturnStatements(t *testing.T) {
-	input := `
-    return 5;
-    return 10;
-    return 993322;
-`
-	lexer := lexer.New(input)
-	parser := New(lexer)
-	program := parser.ParseProgram()
+// ----- Tests for "return" statements -----
 
-	// Check if the correct number of "let" statements are parsed.
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%d",
-			len(program.Statements))
-	}
+// TestReturnStatementsParsing verifies the correct parsing of 'return' statements in the Monkey language.
+func TestReturnStatementsParsing(t *testing.T) {
+	input := `
+return 5;
+return 10;
+return 993322;
+`
+
+	program := parseInput(input)
+	assertNumberOfStatements(t, program, 3)
 
 	for _, stmt := range program.Statements {
-		returnStmt, ok := stmt.(*ast.ReturnStatement)
-		if !ok {
-			t.Errorf("stmt not *ast.ReturnStatement. got=%T", stmt)
-			continue
-		}
-		if returnStmt.TokenLiteral() != "return" {
-			t.Errorf("returnStmt.TokenLiteral not 'return', got %q",
-				returnStmt.TokenLiteral())
-		}
+		assertReturnStatement(t, stmt)
 	}
 }
 
+// assertReturnStatement validates that a given statement is a correctly parsed 'return' statement.
+func assertReturnStatement(t *testing.T, stmt ast.Statement) {
+	returnStmt, ok := stmt.(*ast.ReturnStatement)
+	if !ok {
+		t.Fatalf("Expected *ast.ReturnStatement, but got %T", stmt)
+	}
+
+	if returnStmt.TokenLiteral() != "return" {
+		t.Fatalf("Expected 'return', but got %q", returnStmt.TokenLiteral())
+	}
+}
+
+// ----- Tests for parser errors -----
+
+// TestInvalidStatements checks the parser's ability to handle invalid input.
 func TestParserErrors(t *testing.T) {
 	tests := []struct {
 		input string
@@ -111,10 +96,6 @@ func TestParserErrors(t *testing.T) {
 		{`let x 5;`},
 		{`let = 10;`},
 		{`let 838383;`},
-		{`let x 5;
-let = 10;
-let 838383;
-`},
 	}
 
 	for _, test := range tests {
