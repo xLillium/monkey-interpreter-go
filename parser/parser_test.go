@@ -74,3 +74,30 @@ func testLetStatement(t *testing.T, statement ast.Statement, name string) bool {
 	}
 	return true
 }
+
+func TestParserErrors(t *testing.T) {
+	tests := []struct {
+		input string
+	}{
+		{`let x 5;`},
+		{`let = 10;`},
+		{`let 838383;`},
+		{`let x 5;
+let = 10;
+let 838383;
+`},
+	}
+
+	for _, test := range tests {
+		lexer := lexer.New(test.input)
+		parser := New(lexer)
+		parser.ParseProgram()
+		if len(parser.Errors()) == 0 {
+			t.Errorf("parser.ParseProgram() should have returned errors")
+		} else {
+			for _, err := range parser.Errors() {
+				t.Logf("error: %s", err)
+			}
+		}
+	}
+}

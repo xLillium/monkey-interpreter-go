@@ -3,6 +3,7 @@
 package parser
 
 import (
+	"fmt"
 	"monkey/ast"
 	"monkey/lexer"
 	"monkey/token"
@@ -12,6 +13,7 @@ type Parser struct {
 	lexer     *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 // New initializes a new Parser instance. It will set the current
@@ -23,6 +25,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 	p.nextToken()
 	return p
+}
+func (p *Parser) Errors() []string {
+	return p.errors
 }
 
 // nextToken advances the tokens by one.
@@ -84,5 +89,14 @@ func (p *Parser) advanceIfPeekIs(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	}
+	errorMessage := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, errorMessage)
+	p.skipStatement()
 	return false
+}
+
+func (p *Parser) skipStatement() {
+	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
+		p.nextToken()
+	}
 }
