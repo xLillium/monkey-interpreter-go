@@ -34,6 +34,55 @@ func (p *Parser) nextToken() {
 // ParseProgram is the entry point of the parser. It constructs
 // the AST by parsing statements and expressions from the input.
 func (p *Parser) ParseProgram() *ast.Program {
-	// TODO: Loop through tokens and parse statements and expressions
-	return nil
+	program := &ast.Program{}
+	program.Statements = []ast.Statement{}
+
+	for p.curToken.Type != token.EOF {
+		statement := p.parseStatement()
+		if statement != nil {
+			program.Statements = append(program.Statements, statement)
+		}
+		p.nextToken()
+	}
+	return program
+}
+
+func (p *Parser) parseStatement() ast.Statement {
+	statement := &ast.LetStatement{Token: p.curToken}
+
+	if !p.advanceIfPeekIs(token.IDENT) {
+		return nil
+	}
+
+	statement.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if !p.advanceIfPeekIs(token.ASSIGN) {
+		return nil
+	}
+
+	// TODO: Skip until we encounter a semicolon for simplicity now. We'll handle expressions later.
+	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
+		p.nextToken()
+	}
+
+	return statement
+}
+
+// currentTokenIs checks if the current token has a specific type.
+func (p *Parser) currentTokenIs(t token.TokenType) bool {
+	return p.curToken.Type == t
+}
+
+// nextTokenIs checks if the next token has a specific type.
+func (p *Parser) nextTokenIs(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+
+// advanceIfPeekIs advances to the next token if the peek token matches the given type.
+func (p *Parser) advanceIfPeekIs(t token.TokenType) bool {
+	if p.nextTokenIs(t) {
+		p.nextToken()
+		return true
+	}
+	return false
 }
