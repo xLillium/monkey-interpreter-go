@@ -53,6 +53,17 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
+	switch p.curToken.Type {
+	case token.LET:
+		return p.parseLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
+	default:
+		return nil
+	}
+}
+
+func (p *Parser) parseLetStatement() ast.Statement {
 	statement := &ast.LetStatement{Token: p.curToken}
 
 	if !p.advanceIfPeekIs(token.IDENT) {
@@ -70,6 +81,10 @@ func (p *Parser) parseStatement() ast.Statement {
 		p.nextToken()
 	}
 
+	return statement
+}
+func (p *Parser) parseReturnStatement() ast.Statement {
+	statement := &ast.ReturnStatement{Token: p.curToken}
 	return statement
 }
 
