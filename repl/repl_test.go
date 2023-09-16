@@ -45,3 +45,17 @@ func TestREPL_IllegalToken(t *testing.T) {
 		t.Errorf("Expected %q but got %q", expectedOutput, gotOutput)
 	}
 }
+
+// TestREPL_Exit tests the REPL's behavior when receiving the "exit" command.
+func TestREPL_Exit(t *testing.T) {
+	in := bytes.NewBufferString("exit\n")
+	var out bytes.Buffer
+
+	Start(in, &out)
+	expectedOutput := "🐒💻>> 🐒🍌 Monkey says goodbye! 🍌🐒\n"
+	gotOutput := out.String()
+
+	if expectedOutput != gotOutput {
+		t.Errorf("Expected %q but got %q", expectedOutput, gotOutput)
+	}
+}

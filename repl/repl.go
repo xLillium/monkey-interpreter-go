@@ -14,7 +14,7 @@ const PROMPT = "🐒💻>> "
 
 // Start initializes the REPL for the Monkey language.
 // It reads input line by line, lexically analyzes it, and prints out the recognized tokens.
-// The loop continues until an end-of-file marker is encountered.
+// The loop continues until an end-of-file marker is encountered or "exit" is typed
 //
 // Parameters:
 // in : An io.Reader from which input lines are read.
@@ -30,6 +30,12 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
+
+		if line == "exit" {
+			fmt.Fprintln(out, "🐒🍌 Monkey says goodbye! 🍌🐒")
+			return
+		}
+
 		l := lexer.New(line)
 
 		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
