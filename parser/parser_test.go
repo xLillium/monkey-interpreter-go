@@ -137,8 +137,9 @@ func TestString(t *testing.T) {
 	}
 }
 
-// ----- Tests for parsing identifiers -----
+// ----- Tests for parsing expressions -----
 
+// TestParseIdentifierExpression verifies the correct parsing of identifier expressions.
 func TestParseIdentifierExpression(t *testing.T) {
 	input := "myIdentifier;"
 
@@ -169,5 +170,33 @@ func TestParseIdentifierExpression(t *testing.T) {
 	// Check the identifier's token literal.
 	if ident.TokenLiteral() != "myIdentifier" {
 		t.Errorf("ident.TokenLiteral not %s. got=%s", "myIdentifier", ident.TokenLiteral())
+	}
+}
+
+func TestParseIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+	program := parseInput(input)
+
+	// Check for errors first.
+	if len(program.Statements) != 1 {
+		t.Fatalf("Expected a single statement, but got %d", len(program.Statements))
+	}
+	// Ensure that statement is an ExpressionStatement.
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not *ast.ExpressionStatement. got=%T", program.Statements[0])
+	}
+	// Ensure that the expression is an IntegerLiteral.
+	literal, ok := statement.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expression is not *ast.IntegerLiteral. got=%T", statement.Expression)
+	}
+	// Check the integer's value.
+	if literal.Value != 5 {
+		t.Errorf("literal.Value not %d. got=%d", 5, literal.Value)
+	}
+	// Check the integer's token literal.
+	if literal.TokenLiteral() != "5" {
+		t.Errorf("literal.TokenLiteral not %s. got=%s", "5", literal.TokenLiteral())
 	}
 }
