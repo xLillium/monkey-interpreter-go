@@ -1,12 +1,16 @@
 // Package ast defines the abstract syntax tree for the language.
 package ast
 
-import "monkey/token"
+import (
+	"bytes"
+	"monkey/token"
+)
 
 // Node represents a single node in the AST. Every node is expected
 // to provide its associated token's literal representation.
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 // Statement represents a single statement in the Monkey language.
@@ -39,6 +43,17 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+// String returns the string representation of the program.
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
 // Identifier represents an identifier in Monkey,
 // which holds a token of type token.IDENT and its actual value.
 type Identifier struct {
@@ -49,6 +64,11 @@ type Identifier struct {
 func (i *Identifier) expressionNode() {}
 func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
+}
+
+// String returns the string representation of the identifier.
+func (i *Identifier) String() string {
+	return i.Value
 }
 
 // LetStatement represents a let statement in Monkey.
@@ -65,6 +85,19 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
+// String returns the string representation of the let statement.
+func (ls *LetStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(ls.TokenLiteral() + " ")
+	out.WriteString(ls.Name.String())
+	out.WriteString(" = ")
+	if ls.Value != nil {
+		out.WriteString(ls.Value.String())
+	}
+	out.WriteString(";")
+	return out.String()
+}
+
 type ReturnStatement struct {
 	Token token.Token // the 'return' token
 	Value Expression
@@ -73,4 +106,15 @@ type ReturnStatement struct {
 func (rs *ReturnStatement) statementNode() {}
 func (rs *ReturnStatement) TokenLiteral() string {
 	return rs.Token.Literal
+}
+
+// String returns the string representation of the return statement.
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(rs.TokenLiteral() + " ")
+	if rs.Value != nil {
+		out.WriteString(rs.Value.String())
+	}
+	out.WriteString(";")
+	return out.String()
 }

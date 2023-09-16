@@ -3,6 +3,7 @@ package parser
 import (
 	"monkey/ast"
 	"monkey/lexer"
+	"monkey/token"
 	"testing"
 )
 
@@ -109,5 +110,29 @@ func TestParserErrors(t *testing.T) {
 				t.Logf("error: %s", err)
 			}
 		}
+	}
+}
+
+// ----- Tests for string representation of AST nodes -----
+
+// TestString verifies the correct string representation of AST nodes.
+func TestString(t *testing.T) {
+	program := &ast.Program{
+		Statements: []ast.Statement{
+			&ast.LetStatement{
+				Token: token.Token{Type: token.IDENT, Literal: "let"},
+				Name: &ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "myVar"},
+					Value: "myVar",
+				},
+				Value: &ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "anotherVar"},
+					Value: "anotherVar",
+				},
+			},
+		},
+	}
+	if program.String() != "let myVar = anotherVar;" {
+		t.Errorf("program.String() wrong. got=%q", program.String())
 	}
 }
