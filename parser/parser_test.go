@@ -136,3 +136,38 @@ func TestString(t *testing.T) {
 		t.Errorf("program.String() wrong. got=%q", program.String())
 	}
 }
+
+// ----- Tests for parsing identifiers -----
+
+func TestParseIdentifierExpression(t *testing.T) {
+	input := "myIdentifier;"
+
+	program := parseInput(input)
+
+	// Check for errors first.
+	if len(program.Statements) != 1 {
+		t.Fatalf("Expected a single statement, but got %d", len(program.Statements))
+	}
+
+	// Ensure that statement is an ExpressionStatement.
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not *ast.ExpressionStatement. got=%T", program.Statements[0])
+	}
+
+	// Ensure that the expression is an Identifier.
+	ident, ok := statement.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("stmt.Expression is not *ast.Identifier. got=%T", statement.Expression)
+	}
+
+	// Check the identifier's value.
+	if ident.Value != "myIdentifier" {
+		t.Errorf("ident.Value not %s. got=%s", "myIdentifier", ident.Value)
+	}
+
+	// Check the identifier's token literal.
+	if ident.TokenLiteral() != "myIdentifier" {
+		t.Errorf("ident.TokenLiteral not %s. got=%s", "myIdentifier", ident.TokenLiteral())
+	}
+}
