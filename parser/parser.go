@@ -19,21 +19,14 @@ type Parser struct {
 // New initializes a new Parser instance. It will set the current
 // and peek tokens by reading from the lexer twice.
 func New(l *lexer.Lexer) *Parser {
-	// Initialize the parser with the lexer and set the current and peek tokens.
 	p := &Parser{lexer: l}
-	// Read two tokens, so curToken and peekToken are both set.
 	p.nextToken()
 	p.nextToken()
 	return p
 }
+
 func (p *Parser) Errors() []string {
 	return p.errors
-}
-
-// nextToken advances the tokens by one.
-func (p *Parser) nextToken() {
-	p.curToken = p.peekToken
-	p.peekToken = p.lexer.NextToken()
 }
 
 // ParseProgram is the entry point of the parser. It constructs
@@ -42,7 +35,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
-	for p.curToken.Type != token.EOF {
+	for !p.currentTokenIs(token.EOF) {
 		statement := p.parseStatement()
 		if statement != nil {
 			program.Statements = append(program.Statements, statement)
@@ -77,15 +70,18 @@ func (p *Parser) parseLetStatement() ast.Statement {
 	}
 
 	// TODO: Skip until we encounter a semicolon for simplicity now. We'll handle expressions later.
-	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
-		p.nextToken()
-	}
-
+	p.skipStatement()
 	return statement
 }
 func (p *Parser) parseReturnStatement() ast.Statement {
 	statement := &ast.ReturnStatement{Token: p.curToken}
 	return statement
+}
+
+// Token navigation and validation functions.
+func (p *Parser) nextToken() {
+	p.curToken = p.peekToken
+	p.peekToken = p.lexer.NextToken()
 }
 
 // currentTokenIs checks if the current token has a specific type.
@@ -104,8 +100,7 @@ func (p *Parser) advanceIfPeekIs(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	}
-	errorMessage := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
-	p.errors = append(p.errors, errorMessage)
+	p.addError(fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type))
 	p.skipStatement()
 	return false
 }
@@ -114,4 +109,8 @@ func (p *Parser) skipStatement() {
 	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
 		p.nextToken()
 	}
+}
+
+func (p *Parser) addError(msg string) {
+	p.errors = append(p.errors, msg)
 }
