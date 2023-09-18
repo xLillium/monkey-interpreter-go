@@ -36,8 +36,8 @@ type (
 // Parser represents the Monkey language parser structure.
 type Parser struct {
 	lexer          *lexer.Lexer
-	curToken       token.Token
-	peekToken      token.Token
+	current        token.Token
+	peek           token.Token
 	errors         []string
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
@@ -52,8 +52,8 @@ func New(l *lexer.Lexer) *Parser {
 	}
 
 	// Set up initial tokens for curToken and peekToken.
-	p.nextToken()
-	p.nextToken()
+	p.advanceToken()
+	p.advanceToken()
 
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
@@ -81,23 +81,23 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 
 // ParseProgram is the entry point of the parser. It constructs
 // the AST by parsing statements and expressions from the input.
-func (p *Parser) ParseProgram() *ast.Program {
+func (parser *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
-	for !p.currentTokenIs(token.EOF) {
-		statement := p.parseStatement()
+	for !parser.tokenIs(parser.current, token.EOF) {
+		statement := parser.parseStatement()
 		if statement != nil {
 			program.Statements = append(program.Statements, statement)
 		}
-		p.nextToken()
+		parser.advanceToken()
 	}
 	return program
 }
 
 // parseStatement dispatches the correct parsing function based on the current token type.
 func (p *Parser) parseStatement() ast.Statement {
-	switch p.curToken.Type {
+	switch p.current.Type {
 	case token.LET:
 		return p.parseLetStatement()
 	case token.RETURN:
@@ -108,47 +108,47 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
-	statement := &ast.LetStatement{Token: p.curToken}
+	statement := &ast.LetStatement{Token: p.current}
 
 	if !p.advanceIfPeekIs(token.IDENT) {
 		return nil
 	}
 
-	statement.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	statement.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.advanceIfPeekIs(token.ASSIGN) {
 		return nil
 	}
 
 	// TODO: Skip until we encounter a semicolon for simplicity now. We'll handle expressions later.
-	p.skipStatement()
+	p.skipToStatementEnd()
 	return statement
 }
 func (p *Parser) parseReturnStatement() ast.Statement {
-	statement := &ast.ReturnStatement{Token: p.curToken}
-	p.skipStatement()
+	statement := &ast.ReturnStatement{Token: p.current}
+	p.skipToStatementEnd()
 	return statement
 }
 
 func (p *Parser) parseExpressionStatement() ast.Statement {
-	statement := &ast.ExpressionStatement{Token: p.curToken}
+	statement := &ast.ExpressionStatement{Token: p.current}
 	statement.Expression = p.parseExpression(LOWEST)
-	if p.nextTokenIs(token.SEMICOLON) {
-		p.nextToken()
+	if p.tokenIs(p.peek, token.SEMICOLON) {
+		p.advanceToken()
 	}
 	return statement
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	return &ast.Identifier{Token: p.current, Value: p.current.Literal}
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	integerLiteral := &ast.IntegerLiteral{Token: p.curToken}
-	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	integerLiteral := &ast.IntegerLiteral{Token: p.current}
+	value, err := strconv.ParseInt(p.current.Literal, 0, 64)
 
 	if err != nil {
-		p.addError(fmt.Sprintf("could not parse %q as integer", p.curToken.Literal))
+		p.addError(fmt.Sprintf("could not parse %q as integer", p.current.Literal))
 		return nil
 	}
 
@@ -157,20 +157,20 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	prefix := p.prefixParseFns[p.curToken.Type]
+	prefix := p.prefixParseFns[p.current.Type]
 	if prefix == nil {
-		p.noPrefixParseFnError(p.curToken.Type)
+		p.noPrefixParseFnError(p.current.Type)
 		return nil
 	}
 	leftExp := prefix()
 
 	// TODO: Skip until we encounter a semicolon for simplicity now. We'll handle expressions later.
-	for !p.nextTokenIs(token.SEMICOLON) && precedence <= p.peekPrecedence() {
-		infix := p.infixParseFns[p.peekToken.Type]
+	for !p.tokenIs(p.peek, token.SEMICOLON) && precedence <= p.peekPrecedence() {
+		infix := p.infixParseFns[p.peek.Type]
 		if infix == nil {
 			return leftExp
 		}
-		p.nextToken()
+		p.advanceToken()
 		leftExp = infix(leftExp)
 	}
 
@@ -179,23 +179,23 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{
-		Token:    p.curToken,
-		Operator: p.curToken.Literal,
+		Token:    p.current,
+		Operator: p.current.Literal,
 	}
-	p.nextToken()
+	p.advanceToken()
 	expression.Right = p.parseExpression(PREFIX)
 	return expression
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression := &ast.InfixExpression{
-		Token:    p.curToken,
-		Operator: p.curToken.Literal,
+		Token:    p.current,
+		Operator: p.current.Literal,
 		Left:     left,
 	}
 
 	precedence := p.currentPrecedence()
-	p.nextToken()
+	p.advanceToken()
 	expression.Right = p.parseExpression(precedence)
 	return expression
 }
@@ -206,15 +206,32 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 
 // Token navigation and validation functions.
 
-// nextToken advances the parser to the next token.
-func (p *Parser) nextToken() {
-	p.curToken = p.peekToken
-	p.peekToken = p.lexer.NextToken()
+// advanceToken advances to the next token.
+func (p *Parser) advanceToken() {
+	p.current = p.peek
+	p.peek = p.lexer.NextToken()
+}
+
+// advanceIfPeekIs advances to the next token if the peek token matches the given type.
+// If not, it logs an error and skips to the end of the statement.
+func (parser *Parser) advanceIfPeekIs(t token.TokenType) bool {
+	if parser.tokenIs(parser.peek, t) {
+		parser.advanceToken()
+		return true
+	}
+	parser.addError(fmt.Sprintf("expected next token to be %s, got %s instead", t, parser.peek.Type))
+	parser.skipToStatementEnd()
+	return false
+}
+
+// tokenIs checks if the given token has a specific type.
+func (p *Parser) tokenIs(token token.Token, tokenType token.TokenType) bool {
+	return token.Type == tokenType
 }
 
 // currentPrecedence returns the precedence of the current token.
 func (p *Parser) currentPrecedence() int {
-	if precedence, ok := precedences[p.curToken.Type]; ok {
+	if precedence, ok := precedences[p.current.Type]; ok {
 		return precedence
 	}
 	return LOWEST
@@ -222,39 +239,17 @@ func (p *Parser) currentPrecedence() int {
 
 // peekPrecedence returns the precedence of the next token.
 func (p *Parser) peekPrecedence() int {
-	if prec, ok := precedences[p.peekToken.Type]; ok {
+	if prec, ok := precedences[p.peek.Type]; ok {
 		return prec
 	}
 	return LOWEST
 }
 
-// currentTokenIs checks if the current token has a specific type.
-func (p *Parser) currentTokenIs(t token.TokenType) bool {
-	return p.curToken.Type == t
-}
-
-// nextTokenIs checks if the next token has a specific type.
-func (p *Parser) nextTokenIs(t token.TokenType) bool {
-	return p.peekToken.Type == t
-}
-
-// advanceIfPeekIs advances to the next token if the peek token matches the given type.
-// If not, it logs an error and skips to the end of the statement.
-func (p *Parser) advanceIfPeekIs(t token.TokenType) bool {
-	if p.nextTokenIs(t) {
-		p.nextToken()
-		return true
-	}
-	p.addError(fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type))
-	p.skipStatement()
-	return false
-}
-
-// skipStatement skips tokens until a semicolon or EOF is encountered.
+// skipToStatementEnd skips tokens until a semicolon or EOF is encountered.
 // This is useful for error recovery.
-func (p *Parser) skipStatement() {
-	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
-		p.nextToken()
+func (p *Parser) skipToStatementEnd() {
+	for p.current.Type != token.SEMICOLON && p.current.Type != token.EOF {
+		p.advanceToken()
 	}
 }
 
