@@ -18,12 +18,24 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	SUM    // +
-	PREFIX // -X or !X
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunction(X)
 )
 
 var precedences = map[token.TokenType]int{
-	token.PLUS: SUM,
+	token.EQ:       EQUALS,
+	token.NOT_EQ:   EQUALS,
+	token.LT:       LESSGREATER,
+	token.GT:       LESSGREATER,
+	token.PLUS:     SUM,
+	token.MINUS:    SUM,
+	token.SLASH:    PRODUCT,
+	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 type (
@@ -172,7 +184,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	leftExp := prefix()
 
 	// TODO: Skip until we encounter a semicolon for simplicity now. We'll handle expressions later.
-	for !p.tokenIs(p.peek, token.SEMICOLON) && precedence <= p.peekPrecedence() {
+	for !p.tokenIs(p.peek, token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peek.Type]
 		if infix == nil {
 			return leftExp
@@ -203,6 +215,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	precedence := p.currentPrecedence()
 	p.advanceToken()
+
 	expression.Right = p.parseExpression(precedence)
 	return expression
 }
