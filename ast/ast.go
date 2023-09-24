@@ -235,3 +235,20 @@ func (ie *IfExpression) String() string {
 	}
 	return out.String()
 }
+
+type ElseExpression struct {
+	Token       token.Token     // the 'else' token
+	Consequence *BlockStatement // the block to execute if the condition is false
+}
+
+func (ee *ElseExpression) expressionNode() {}
+func (ee *ElseExpression) TokenLiteral() string {
+	return ee.Token.Literal
+}
+
+func (ee *ElseExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("else ")
+	out.WriteString(ee.Consequence.String())
+	return out.String()
+}

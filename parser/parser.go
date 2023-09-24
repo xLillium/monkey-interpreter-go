@@ -255,6 +255,16 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		return nil
 	}
 	expression.Consequence = p.parseBlockStatement()
+
+	if p.tokenIs(p.peek, token.ELSE) {
+		p.advanceToken()
+
+		if !p.advanceIfPeekIs(token.LBRACE) {
+			return nil
+		}
+
+		expression.Alternative = p.parseBlockStatement()
+	}
 	return expression
 }
 
